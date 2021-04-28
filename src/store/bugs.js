@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import moment from 'moment';
 import { createSelector } from 'reselect';
 import { apiCallBegan } from './api';
 //reducer
@@ -20,6 +21,7 @@ const slice = createSlice({
     bugsReceived: (bugs, action) => {
       bugs.list = action.payload;
       bugs.loading = false;
+      bugs.lastFetch = Date.now();
     },
 
     bugAssignedToUser: (bugs, action) => {
@@ -59,13 +61,23 @@ export default slice.reducer;
 
 // Action Creators
 const url = '/bugs';
-export const loadBugs = () =>
-  apiCallBegan({
-    url,
-    onStart: bugsRequested.type,
-    onSuccess: bugsReceived.type,
-    onError: bugsRequestFailed.type,
-  });
+
+// () => fn(dispatch, getState)
+export const loadBugs = () => (dispatch, getState) => {
+  const { lastFetch } = getState().entities.bugs;
+
+  const diffInMinutes = moment().diff(moment(lastFetch), 'minutes');
+  if (diffInMinutes < 10) return;
+
+  dispatch(
+    apiCallBegan({
+      url,
+      onStart: bugsRequested.type,
+      onSuccess: bugsReceived.type,
+      onError: bugsRequestFailed.type,
+    })
+  );
+};
 //Selector
 
 //Memoization
