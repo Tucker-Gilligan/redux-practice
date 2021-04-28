@@ -27,6 +27,11 @@ const slice = createSlice({
       const index = bugs.list.findIndex(bug => bug.id === bugId);
       bugs.list[index].userId = userId;
     },
+
+    bugsRequestFailed: (bugs, action) => {
+      bugs.loading = false;
+    },
+
     bugAdded: (bugs, action) => {
       bugs.list.push({
         id: ++lastId,
@@ -47,6 +52,7 @@ export const {
   bugAssignedToUser,
   bugsReceived,
   bugsRequested,
+  bugsRequestFailed,
 } = slice.actions;
 
 export default slice.reducer;
@@ -56,7 +62,9 @@ const url = '/bugs';
 export const loadBugs = () =>
   apiCallBegan({
     url,
+    onStart: bugsRequested.type,
     onSuccess: bugsReceived.type,
+    onError: bugsRequestFailed.type,
   });
 //Selector
 
